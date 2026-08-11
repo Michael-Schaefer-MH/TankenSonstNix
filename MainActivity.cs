@@ -1,3 +1,4 @@
+using System.Globalization;
 using Android.Content;
 using Android.Content.PM;
 using Android.Locations;
@@ -5,7 +6,9 @@ using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 using TankenSonstNix.Adapters;
+using TankenSonstNix.Models;
 using TankenSonstNix.Services;
+using AndroidUri = Android.Net.Uri;
 
 namespace TankenSonstNix;
 
@@ -47,6 +50,7 @@ public class MainActivity : Activity
         _apiKeyInput.Text = prefs.GetString(ApiKeyPrefKey, string.Empty);
 
         _refreshButton.Click += (_, _) => OnRefreshClicked();
+        _stationsList.ItemClick += (_, e) => OnStationClicked(((StationAdapter)_stationsList.Adapter!)[e.Position]);
     }
 
     private void OnRefreshClicked()
@@ -163,6 +167,22 @@ public class MainActivity : Activity
         _loadingIndicator.Visibility = isLoading ? ViewStates.Visible : ViewStates.Gone;
         if (isLoading)
             _statusLabel.Visibility = ViewStates.Gone;
+    }
+
+    private void OnStationClicked(GasStation station)
+    {
+        var lat = station.Lat.ToString(CultureInfo.InvariantCulture);
+        var lng = station.Lng.ToString(CultureInfo.InvariantCulture);
+        var label = Uri.EscapeDataString(station.Name);
+
+        var uri = AndroidUri.Parse($"geo:{lat},{lng}?q={lat},{lng}({label})")!;
+        var intent = new Intent(Intent.ActionView, uri);
+        intent.SetPackage("com.google.android.apps.maps");
+
+        if (intent.ResolveActivity(PackageManager!) is null)
+            intent.SetPackage(null);
+
+        StartActivity(intent);
     }
 
     private void ShowError(string message)

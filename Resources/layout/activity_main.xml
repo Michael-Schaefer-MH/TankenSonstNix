@@ -12,14 +12,16 @@
         android:layout_height="wrap_content"
         android:hint="Tankerkönig API-Key eingeben"
         android:inputType="text"
-        android:maxLines="1" />
+        android:maxLines="1"
+        android:textSize="18sp" />
 
     <Button
         android:id="@+id/refreshButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Preise aktualisieren" />
+        android:text="Preise aktualisieren"
+        android:textSize="18sp" />
 
     <ProgressBar
         android:id="@+id/loadingIndicator"
@@ -36,6 +38,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:textColor="#CC0000"
+        android:textSize="16sp"
         android:visibility="gone" />
 
     <TextView
@@ -45,7 +48,8 @@
         android:layout_marginTop="24dp"
         android:gravity="center"
         android:text="Noch keine Daten geladen. Tippe auf &quot;Preise aktualisieren&quot;."
-        android:textColor="#888888" />
+        android:textColor="#888888"
+        android:textSize="16sp" />
 
     <ListView
         android:id="@+id/stationsList"
