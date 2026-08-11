@@ -47,7 +47,9 @@ public class MainActivity : Activity
         _stationsList = FindViewById<ListView>(Resource.Id.stationsList)!;
 
         var prefs = GetSharedPreferences(PrefsName, FileCreationMode.Private)!;
-        _apiKeyInput.Text = prefs.GetString(ApiKeyPrefKey, string.Empty);
+        var savedApiKey = prefs.GetString(ApiKeyPrefKey, string.Empty);
+        _apiKeyInput.Text = savedApiKey;
+        _apiKeyInput.Visibility = string.IsNullOrWhiteSpace(savedApiKey) ? ViewStates.Visible : ViewStates.Gone;
 
         _refreshButton.Click += (_, _) => OnRefreshClicked();
         _stationsList.ItemClick += (_, e) => OnStationClicked(((StationAdapter)_stationsList.Adapter!)[e.Position]);
@@ -118,11 +120,17 @@ public class MainActivity : Activity
 
             var stations = await _service.GetNearbyStationsAsync(location.Latitude, location.Longitude, apiKey);
 
+            _apiKeyInput.Visibility = ViewStates.Gone;
             _stationsList.Adapter = new StationAdapter(this, stations);
             _emptyView.Visibility = stations.Count == 0 ? ViewStates.Visible : ViewStates.Gone;
 
             if (stations.Count == 0)
                 ShowError("Keine Tankstellen im Umkreis gefunden.");
+        }
+        catch (TankerkoenigApiKeyException)
+        {
+            _apiKeyInput.Visibility = ViewStates.Visible;
+            ShowError("Der API-Key scheint ungültig zu sein. Bitte erneut eingeben.");
         }
         catch (Exception ex)
         {

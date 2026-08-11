@@ -18,7 +18,7 @@ public class TankerkoenigService
     /// <summary>
     /// Liefert die bis zu 10 nächstgelegenen Tankstellen im angegebenen Radius, sortiert nach Entfernung.
     /// </summary>
-    public async Task<List<GasStation>> GetNearbyStationsAsync(double lat, double lng, string apiKey, double radiusKm = 10)
+    public async Task<List<GasStation>> GetNearbyStationsAsync(double lat, double lng, string apiKey, double radiusKm = 25)
     {
         if (string.IsNullOrWhiteSpace(apiKey))
             throw new ArgumentException("API-Key darf nicht leer sein.", nameof(apiKey));
@@ -38,7 +38,13 @@ public class TankerkoenigService
         });
 
         if (result is null || !result.Ok)
-            throw new InvalidOperationException($"Tankerkönig-API Fehler: {result?.Message ?? "Unbekannte Antwort"}");
+        {
+            var message = result?.Message ?? "Unbekannte Antwort";
+            if (message.Contains("apikey", StringComparison.OrdinalIgnoreCase))
+                throw new TankerkoenigApiKeyException(message);
+
+            throw new InvalidOperationException($"Tankerkönig-API Fehler: {message}");
+        }
 
         var stations = result.Stations ?? new List<GasStation>();
 
@@ -58,5 +64,12 @@ public class TankerkoenigService
 
         [JsonPropertyName("stations")]
         public List<GasStation>? Stations { get; set; }
+    }
+}
+
+public class TankerkoenigApiKeyException : Exception
+{
+    public TankerkoenigApiKeyException(string message) : base(message)
+    {
     }
 }
