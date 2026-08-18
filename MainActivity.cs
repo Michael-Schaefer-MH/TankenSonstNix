@@ -16,8 +16,7 @@ namespace TankenSonstNix;
 public class MainActivity : Activity
 {
     private const int LocationPermissionRequestCode = 100;
-    private const string PrefsName = "TankenSonstNixPrefs";
-    private const string ApiKeyPrefKey = "apikey";
+    private const string ApiKey = "4d0f89db-c7e2-471f-9583-eda994ef2050";
 
     private static readonly string[] LocationPermissions =
     {
@@ -27,7 +26,6 @@ public class MainActivity : Activity
 
     private readonly TankerkoenigService _service = new(new HttpClient());
 
-    private EditText _apiKeyInput = null!;
     private Button _refreshButton = null!;
     private ProgressBar _loadingIndicator = null!;
     private TextView _statusLabel = null!;
@@ -39,40 +37,23 @@ public class MainActivity : Activity
         base.OnCreate(savedInstanceState);
         SetContentView(Resource.Layout.activity_main);
 
-        _apiKeyInput = FindViewById<EditText>(Resource.Id.apiKeyInput)!;
         _refreshButton = FindViewById<Button>(Resource.Id.refreshButton)!;
         _loadingIndicator = FindViewById<ProgressBar>(Resource.Id.loadingIndicator)!;
         _statusLabel = FindViewById<TextView>(Resource.Id.statusLabel)!;
         _emptyView = FindViewById<TextView>(Resource.Id.emptyView)!;
         _stationsList = FindViewById<ListView>(Resource.Id.stationsList)!;
 
-        var prefs = GetSharedPreferences(PrefsName, FileCreationMode.Private)!;
-        var savedApiKey = prefs.GetString(ApiKeyPrefKey, string.Empty);
-        _apiKeyInput.Text = savedApiKey;
-        _apiKeyInput.Visibility = string.IsNullOrWhiteSpace(savedApiKey) ? ViewStates.Visible : ViewStates.Gone;
-
         _refreshButton.Click += (_, _) => OnRefreshClicked();
         _stationsList.ItemClick += (_, e) => OnStationClicked(((StationAdapter)_stationsList.Adapter!)[e.Position]);
+
+        OnRefreshClicked();
     }
 
     private void OnRefreshClicked()
     {
-        var apiKey = _apiKeyInput.Text?.Trim();
-        if (string.IsNullOrWhiteSpace(apiKey))
-        {
-            ShowError("Bitte zuerst einen Tankerkönig API-Key eingeben (kostenlos unter creativecommons.tankerkoenig.de).");
-            return;
-        }
-
-        // API-Key lokal merken
-        GetSharedPreferences(PrefsName, FileCreationMode.Private)!
-            .Edit()!
-            .PutString(ApiKeyPrefKey, apiKey)!
-            .Apply();
-
         if (HasLocationPermission())
         {
-            _ = LoadStationsAsync(apiKey);
+            _ = LoadStationsAsync(ApiKey);
         }
         else
         {
@@ -95,9 +76,7 @@ public class MainActivity : Activity
 
         if (grantResults.Length > 0 && grantResults.Any(r => r == Permission.Granted))
         {
-            var apiKey = _apiKeyInput.Text?.Trim();
-            if (!string.IsNullOrWhiteSpace(apiKey))
-                _ = LoadStationsAsync(apiKey);
+            _ = LoadStationsAsync(ApiKey);
         }
         else
         {
@@ -120,7 +99,6 @@ public class MainActivity : Activity
 
             var stations = await _service.GetNearbyStationsAsync(location.Latitude, location.Longitude, apiKey);
 
-            _apiKeyInput.Visibility = ViewStates.Gone;
             _stationsList.Adapter = new StationAdapter(this, stations);
             _emptyView.Visibility = stations.Count == 0 ? ViewStates.Visible : ViewStates.Gone;
 
@@ -129,8 +107,7 @@ public class MainActivity : Activity
         }
         catch (TankerkoenigApiKeyException)
         {
-            _apiKeyInput.Visibility = ViewStates.Visible;
-            ShowError("Der API-Key scheint ungültig zu sein. Bitte erneut eingeben.");
+            ShowError("Der API-Key ist ungültig.");
         }
         catch (Exception ex)
         {
