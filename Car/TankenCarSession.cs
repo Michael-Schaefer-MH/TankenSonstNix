@@ -5,7 +5,7 @@ namespace TankenSonstNix.Car;
 
 public class TankenCarSession : Session
 {
-    public override Screen OnCreateScreen(Intent intent)
+    public override Screen OnCreateScreen(Intent? intent)
     {
         return new StationListScreen(CarContext!);
     }

@@ -18,6 +18,7 @@ public class StationListScreen : Screen
     private static readonly string[] LocationPermissions = { "android.permission.ACCESS_FINE_LOCATION" };
 
     private readonly TankerkoenigService _service = new(new HttpClient());
+    private readonly CarContext _carContext;
 
     private bool _isLoading = true;
     private string? _errorMessage;
@@ -25,12 +26,13 @@ public class StationListScreen : Screen
 
     public StationListScreen(CarContext carContext) : base(carContext)
     {
+        _carContext = carContext;
         RequestLocationAndLoad();
     }
 
     private void RequestLocationAndLoad()
     {
-        CarContext.RequestPermissions(LocationPermissions, new PermissionsListener((granted, rejected) =>
+        _carContext.RequestPermissions(LocationPermissions, new PermissionsListener((granted, rejected) =>
         {
             if (granted.Contains("android.permission.ACCESS_FINE_LOCATION"))
             {
@@ -49,7 +51,7 @@ public class StationListScreen : Screen
     {
         try
         {
-            var prefs = CarContext.GetSharedPreferences(PrefsName, FileCreationMode.Private)!;
+            var prefs = _carContext.GetSharedPreferences(PrefsName, FileCreationMode.Private)!;
             var apiKey = prefs.GetString(ApiKeyPrefKey, string.Empty);
             if (string.IsNullOrWhiteSpace(apiKey))
             {
@@ -81,7 +83,7 @@ public class StationListScreen : Screen
 
     private Location? GetBestLastKnownLocation()
     {
-        var locationManager = (LocationManager)CarContext.GetSystemService(Context.LocationService)!;
+        var locationManager = (LocationManager)_carContext.GetSystemService(Context.LocationService)!;
         string[] providers = { LocationManager.GpsProvider, LocationManager.NetworkProvider, LocationManager.PassiveProvider };
 
         Location? best = null;
@@ -103,9 +105,13 @@ public class StationListScreen : Screen
 
     public override ITemplate OnGetTemplate()
     {
+        var header = new Header.Builder()
+            .SetTitle("Tankstellen in der Nähe")!
+            .SetStartHeaderAction(CarAction.AppIcon!)!
+            .Build()!;
+
         var builder = new ListTemplate.Builder()
-            .SetTitle("Tankstellen in der Nähe")
-            .SetHeaderAction(CarAction.AppIcon!);
+            .SetHeader(header)!;
 
         if (_isLoading)
         {
@@ -116,7 +122,7 @@ public class StationListScreen : Screen
         if (_stations.Count == 0)
         {
             var items = new ItemList.Builder()
-                .AddItem(new Row.Builder().SetTitle(_errorMessage ?? "Keine Daten.").Build()!);
+                .AddItem(new Row.Builder().SetTitle(_errorMessage ?? "Keine Daten.")!.Build()!)!;
             builder.SetSingleList(items.Build()!);
             return builder.Build()!;
         }
@@ -125,10 +131,10 @@ public class StationListScreen : Screen
         foreach (var station in _stations)
         {
             var row = new Row.Builder()
-                .SetTitle(station.Name)
-                .AddText(station.Address)
-                .AddText($"{station.DistanceText} · Diesel {station.DieselText} · E5 {station.E5Text} · E10 {station.E10Text}")
-                .SetOnClickListener(new ClickListener(() => NavigateTo(station)))
+                .SetTitle(station.Name)!
+                .AddText(station.Address)!
+                .AddText($"{station.DistanceText} · Diesel {station.DieselText} · E5 {station.E5Text} · E10 {station.E10Text}")!
+                .SetOnClickListener(new ClickListener(() => NavigateTo(station)))!
                 .Build();
             itemList.AddItem(row!);
         }
@@ -142,7 +148,7 @@ public class StationListScreen : Screen
         var lat = station.Lat.ToString(CultureInfo.InvariantCulture);
         var lng = station.Lng.ToString(CultureInfo.InvariantCulture);
         var intent = new Intent(CarContext.ActionNavigate, AndroidUri.Parse($"geo:{lat},{lng}"));
-        CarContext.StartCarApp(intent);
+        _carContext.StartCarApp(intent);
     }
 
     private sealed class ClickListener : Java.Lang.Object, IOnClickListener
@@ -166,6 +172,7 @@ public class StationListScreen : Screen
             _onResult = onResult;
         }
 
-        public void OnRequestPermissionsResult(IList<string> approved, IList<string> rejected) => _onResult(approved, rejected);
+        public void OnRequestPermissionsResult(IList<string>? approved, IList<string>? rejected) =>
+            _onResult(approved ?? new List<string>(), rejected ?? new List<string>());
     }
 }

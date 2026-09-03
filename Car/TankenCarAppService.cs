@@ -15,7 +15,7 @@ public class TankenCarAppService : CarAppService
         return HostValidator.AllowAllHostsValidator!;
     }
 
-    public override Session OnCreateSession(SessionInfo sessionInfo)
+    public override Session OnCreateSession(SessionInfo? sessionInfo)
     {
         return new TankenCarSession();
     }

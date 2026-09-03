@@ -5,7 +5,7 @@ using TankenSonstNix.Models;
 
 namespace TankenSonstNix.Services;
 
-public class TankerkoenigService
+public partial class TankerkoenigService
 {
     private readonly HttpClient _httpClient;
     private const string BaseUrl = "https://creativecommons.tankerkoenig.de/json/list.php";
@@ -32,10 +32,7 @@ public class TankerkoenigService
         response.EnsureSuccessStatusCode();
 
         var json = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<TankerkoenigResponse>(json, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize(json, TankerkoenigJsonContext.Default.TankerkoenigResponse);
 
         if (result is null || !result.Ok)
         {
@@ -64,6 +61,12 @@ public class TankerkoenigService
 
         [JsonPropertyName("stations")]
         public List<GasStation>? Stations { get; set; }
+    }
+
+    [JsonSourceGenerationOptions(PropertyNameCaseInsensitive = true)]
+    [JsonSerializable(typeof(TankerkoenigResponse))]
+    private partial class TankerkoenigJsonContext : JsonSerializerContext
+    {
     }
 }
 
