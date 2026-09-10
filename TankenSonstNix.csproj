@@ -6,7 +6,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <ApplicationId>com.TankenSonstNix</ApplicationId>
-        <ApplicationVersion>3</ApplicationVersion>
+        <ApplicationVersion>4</ApplicationVersion>
         <ApplicationDisplayVersion>1.0.1</ApplicationDisplayVersion>
         <!--
           Enables trim analyzers and full trimming during Release mode.
