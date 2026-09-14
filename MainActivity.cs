@@ -16,7 +16,6 @@ namespace TankenSonstNix;
 public class MainActivity : Activity
 {
     private const int LocationPermissionRequestCode = 100;
-    private const string ApiKey = "4d0f89db-c7e2-471f-9583-eda994ef2050";
 
     private static readonly string[] LocationPermissions =
     {
@@ -53,7 +52,7 @@ public class MainActivity : Activity
     {
         if (HasLocationPermission())
         {
-            _ = LoadStationsAsync(ApiKey);
+            _ = LoadStationsAsync(TankerkoenigConfig.ApiKey);
         }
         else
         {
@@ -76,7 +75,7 @@ public class MainActivity : Activity
 
         if (grantResults.Length > 0 && grantResults.Any(r => r == Permission.Granted))
         {
-            _ = LoadStationsAsync(ApiKey);
+            _ = LoadStationsAsync(TankerkoenigConfig.ApiKey);
         }
         else
         {

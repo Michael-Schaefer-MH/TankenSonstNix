@@ -12,9 +12,6 @@ namespace TankenSonstNix.Car;
 
 public class StationListScreen : Screen
 {
-    private const string PrefsName = "TankenSonstNixPrefs";
-    private const string ApiKeyPrefKey = "apikey";
-
     private static readonly string[] LocationPermissions = { "android.permission.ACCESS_FINE_LOCATION" };
 
     private readonly TankerkoenigService _service = new(new HttpClient());
@@ -51,14 +48,6 @@ public class StationListScreen : Screen
     {
         try
         {
-            var prefs = _carContext.GetSharedPreferences(PrefsName, FileCreationMode.Private)!;
-            var apiKey = prefs.GetString(ApiKeyPrefKey, string.Empty);
-            if (string.IsNullOrWhiteSpace(apiKey))
-            {
-                _errorMessage = "Bitte zuerst am Handy einen Tankerkönig API-Key eingeben.";
-                return;
-            }
-
             var location = GetBestLastKnownLocation();
             if (location is null)
             {
@@ -66,7 +55,7 @@ public class StationListScreen : Screen
                 return;
             }
 
-            _stations = await _service.GetNearbyStationsAsync(location.Latitude, location.Longitude, apiKey);
+            _stations = await _service.GetNearbyStationsAsync(location.Latitude, location.Longitude, TankerkoenigConfig.ApiKey);
             if (_stations.Count == 0)
                 _errorMessage = "Keine Tankstellen im Umkreis gefunden.";
         }
